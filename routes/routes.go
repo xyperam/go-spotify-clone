@@ -10,5 +10,6 @@ func SetupRoutes() *gin.Engine {
 
 	r.POST("/register", controller.RegisterUser)
 	r.POST("/login", controller.LoginUser)
+	r.GET("/spotify/token", controller.GetSpotifyTokenHandler)
 	return r
 }

@@ -26,8 +26,8 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	var exosistingEmail models.User
-	if err := utils.DB.Where("email =?", input.Email).First(&exosistingEmail).Error; err == nil {
+	var existingEmail models.User
+	if err := utils.DB.Where("email =?", input.Email).First(&existingEmail).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email already exists"})
 		return
 	} else if err != gorm.ErrRecordNotFound {

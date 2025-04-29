@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/xyperam/go-spotify-clone/controller"
+	"github.com/xyperam/go-spotify-clone/middleware"
 )
 
 func SetupRoutes() *gin.Engine {
@@ -10,6 +11,10 @@ func SetupRoutes() *gin.Engine {
 
 	r.POST("/register", controller.RegisterUser)
 	r.POST("/login", controller.LoginUser)
+	protected := r.Group("/")
+	protected.Use(middleware.JWTMiddleWare())
 	r.GET("/spotify/token", controller.GetSpotifyTokenHandler)
+	r.GET("/spotify/search", controller.SearchSpotifySong)
+	protected.POST("/playlist/create", controller.CreatePlaylist)
 	return r
 }

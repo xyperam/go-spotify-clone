@@ -60,3 +60,28 @@ func encodeBasicAuth(clientID, clientSecret string) string {
 	auth := clientID + ":" + clientSecret
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 }
+
+func GetSpotifyTrackByID(trackID string, token string) (*models.SpotifyTrack, error) {
+	url := fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", "Bearer "+token)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("failed to get track details: %s", string(bodyBytes))
+	}
+	var track models.SpotifyTrack
+	if err := json.NewDecoder(resp.Body).Decode(&track); err != nil {
+		return nil, err
+	}
+	return &track, nil
+}

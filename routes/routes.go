@@ -16,5 +16,8 @@ func SetupRoutes() *gin.Engine {
 	r.GET("/spotify/token", controller.GetSpotifyTokenHandler)
 	r.GET("/spotify/search", controller.SearchSpotifySong)
 	protected.POST("/playlist/create", controller.CreatePlaylist)
+	// protected.GET("/playlist/:id/tracks", controller.AddTrackToPlaylist)
+	protected.GET("/track/:trackID", controller.GetSpotifyTrackByID)
+
 	return r
 }

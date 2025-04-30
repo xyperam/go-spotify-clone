@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xyperam/go-spotify-clone/models"
@@ -91,83 +92,45 @@ func CreatePlaylist(c *gin.Context) {
 		"playlist": playlist})
 }
 
-// func AddTrackToPlaylist(c *gin.Context) {
-// 	playlistIDParam := c.Param("playlist_id")
-// 	playlistID, err := strconv.Atoi(playlistIDParam)
+func AddTrackToPlaylist(c *gin.Context) {
+	playlistIDStr := c.Param("playlistID")
+	playlistID, err := strconv.Atoi(playlistIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "playlistID must be an integer"})
+		return
+	}
 
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid playlist ID"})
-// 		return
-// 	}
+	var input struct {
+		TrackID string `json:"track_id"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-// 	var input struct {
-// 		SpotifyTrackIDs []string `json:"spotify_track_ids"`
-// 	}
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
-// 	token, err := utils.GetSpotifyAccessToken()
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get token spotify"})
-// 		return
-// 	}
-// 	// Get the playlist from the database
-// 	for _, trackID := range input.SpotifyTrackIDs {
-// 		track, err := utils.GetSpotifyTrackByID(trackID, token)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		newTrack := models.PlaylistTrack{
-// 			PlaylistID: playlistID,
-// 			Title:      track.Name,
-// 			Artist:     track.Artists[0].Name,
-// 			Album:      track.Album.Name,
-// 			SpotifyID:  track.ID,
-// 			PreviewURL: track.PreviewURL,
-// 		}
-// 		result := utils.DB.Create(&newTrack)
-// 		if result.Error != nil {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-// 			return
-// 		}
-// 	}
-// 	c.JSON(http.StatusOK, gin.H{"message": "Tracks added to playlist successfully"})
-// }
+	track, err := utils.FetchSpotifyTrackByID(input.TrackID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get track"})
+		return
+	}
+	playlistTrack := models.PlaylistTrack{
+		PlaylistID: playlistID,
+		Title:      track.Name,
+		Artist:     track.Artists[0].Name,
+		Album:      track.Album.Name,
+		SpotifyID:  track.ID,
+		PreviewURL: track.PreviewURL,
+	}
+	result := utils.DB.Create(&playlistTrack)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
 
-// func GetSpotifyTrackByID(c *gin.Context) {
-// 	trackID := c.Param("trackID")
-// 	if trackID == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "trackID is required"})
-// 		return
-// 	}
-// 	token, err := utils.GetSpotifyAccessToken()
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get token spotify"})
-// 		return
-// 	}
-// 	url := fmt.Sprintf("https://api.spotify.com/v1/tracks/%s", trackID)
+	// Kembalikan response
+	c.JSON(http.StatusOK, gin.H{"message": "Track added to playlist successfully", "track": playlistTrack})
+}
 
-//		req, err := http.NewRequest("GET", url, nil)
-//		if err != nil {
-//			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create request"})
-//			return
-//		}
-//		req.Header.Add("Authorization", "Bearer "+token)
-//		client := &http.Client{}
-//		resp, err := client.Do(req)
-//		if err != nil {
-//			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to execute request"})
-//			return
-//		}
-//		defer resp.Body.Close()
-//		var result map[string]interface{}
-//		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-//			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to decode response"})
-//			return
-//		}
-//		c.JSON(http.StatusOK, result)
-//	}
 func GetSpotifyTrackByID(c *gin.Context) {
 	// Ambil trackID dari URL parameter
 	trackID := c.Param("trackID")

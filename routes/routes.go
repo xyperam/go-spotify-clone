@@ -18,6 +18,6 @@ func SetupRoutes() *gin.Engine {
 	protected.POST("/playlist/create", controller.CreatePlaylist)
 	// protected.GET("/playlist/:id/tracks", controller.AddTrackToPlaylist)
 	protected.GET("/track/:trackID", controller.GetSpotifyTrackByID)
-
+	r.POST("/playlists/:playlistID/tracks", controller.AddTrackToPlaylist)
 	return r
 }

@@ -107,7 +107,11 @@ func AddTrackToPlaylist(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	var exsistingTrack models.PlaylistTrack
+	if err := utils.DB.Where("spotify_id=?", input.TrackID).First(&exsistingTrack).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Track already exists in playlist"})
+		return
+	}
 	track, err := utils.FetchSpotifyTrackByID(input.TrackID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get track"})

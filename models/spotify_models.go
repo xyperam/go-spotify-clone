@@ -16,7 +16,7 @@ type PlaylistInput struct {
 }
 
 type PlaylistTrack struct {
-	PlaylistID int    `json:"playlist_id"`
+	PlaylistID int    `json:"-"`
 	Title      string `json:"title"`
 	Artist     string `json:"artist"`
 	Album      string `json:"album"`
@@ -34,4 +34,9 @@ type SpotifyTrack struct {
 		Name string `json:"name"`
 	} `json:"artists"`
 	PreviewURL string `json:"preview_url"`
+}
+
+type InputTrackToPlaylist struct {
+	PlaylistID int    `json:"playlist_id"`
+	TrackID    string `json:"track_id"`
 }
